@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gradient Sandbox</title>
+    <style>
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-flow: column;
+            overflow-y: hidden;
+        }
+
+        body::-webkit-scrollbar {
+            width: 5px;
+            height: 10px;
+        }
+
+        body::-webkit-scrollbar-track {
+            background-color: #f9f9f9;
+        }
+
+        body::-webkit-scrollbar-thumb {
+            height: 1px;
+            background-color: #d6d6e1;
+        }
+
+        .notice {
+            height: 100%;
+            width: 100%;
+            top: 0;
+            left: 0;
+            position: fixed;
+            background-color: rgba(0, 0, 0, 0.75);
+            transition: opacity 0.3s ease-in-out;
+            display: flex;
+            opacity: 0;
+            z-index: 2;
+            visibility: hidden;
+        }
+
+        .notice>div {
+            display: flex;
+            margin: auto;
+        }
+
+        .notice>div>h1 {
+            color: #ffffff;
+            text-align: center;
+            text-shadow: 0px 0px 5px black;
+            user-select: none;
+        }
+
+        .notice>div>#share {
+            background-color: #ffffff;
+            border-radius: 5px;
+            width: 440px;
+            height: 300px;
+            z-index: 2;
+            position: relative;
+            display: none;
+            margin: 20px 0;
+            flex-flow: column;
+            justify-content: center;
+        }
+
+        .notice #share>div {
+            display: flex;
+            justify-content: center;
+        }
+
+        .notice #share>.close {
+            display: block;
+            width: 24px;
+            height: 24px;
+            background-color: #b7b7b7;
+            margin-right: 2px;
+            cursor: pointer;
+            position: absolute;
+            right: -40px;
+            top: 10px;
+            -webkit-mask-image: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAiIGhlaWdodD0iMTAiIHZpZXdCb3g9IjAgMCAxMCAxMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTkgMUwxIDkiIHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CjxwYXRoIGQ9Ik0xIDFMOSA5IiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L3N2Zz4K");
+            -webkit-mask-size: contain;
+            -webkit-mask-repeat: no-repeat;
+        }
+
+        .notice #share>.close:hover {
+            background-color: #ffffff;
+        }
+
+        .notice #share>p {
+            text-align: center;
+            margin: 0;
+            margin-bottom: 30px;
+            font-size: 22px;
+            font-weight: 600;
+        }
+
+        .notice #share>div>.social {
+            display: block;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            -webkit-mask-size: contain;
+            -webkit-mask-repeat: no-repeat;
+            margin-right: 20px;
+        }
+
+        .notice #share>div>.social:last-of-type {
+            margin-right: 0;
+        }
+
+        .notice #share>button {
+            width: 200px;
+            margin: 0 auto;
+            margin-top: 20px;
+        }
+
+        .vk {
+            background-color: #3f51b5;
+            -webkit-mask-image: url("data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgY2xpcC1ydWxlPSJldmVub2RkIiBkPSJNMTIgMjRDMTguNjI3NCAyNCAyNCAxOC42Mjc0IDI0IDEyQzI0IDUuMzcyNTggMTguNjI3NCAwIDEyIDBDNS4zNzI1OCAwIDAgNS4zNzI1OCAwIDEyQzAgMTguNjI3NCA1LjM3MjU4IDI0IDEyIDI0Wk01LjUyNTEzIDhINy4wNTY3M0M3LjQ0ODE2IDggNy41OTU0MiA4LjE3MTI4IDcuNzQyMiA4LjU5NTMxQzguNDkxMjkgMTAuNzc2OSA5Ljc1NDMxIDEyLjY4MzQgMTAuMjczNSAxMi42ODM0QzEwLjQ2ODIgMTIuNjgzNCAxMC41NTc2IDEyLjU5MzcgMTAuNTU3NiAxMi4wOTk0VjkuODQ0NDFDMTAuNTIyNCA5LjIwMjU1IDEwLjI5ODEgOC45MjQ5NiAxMC4xMzIgOC43MTkzNkMxMC4wMjk0IDguNTkyMzkgOS45NDkgOC40OTI4NyA5Ljk0OSA4LjM1MTk3QzkuOTQ5IDguMTgwNjkgMTAuMDk1NCA4IDEwLjMzODcgOEgxMi43NDU1QzEzLjA3MDEgOCAxMy4xODMxIDguMTczNTEgMTMuMTgzMSA4LjU2Mjg5VjExLjU5NjVDMTMuMTgzMSAxMS45MjA5IDEzLjMyNCAxMi4wMzQ0IDEzLjQyMTQgMTIuMDM0NEMxMy42MTYxIDEyLjAzNDQgMTMuNzc4NCAxMS45MjA5IDE0LjEzNTQgMTEuNTY0QzE1LjIzODggMTAuMzMxMSAxNi4wMTc2IDguNDMzMDQgMTYuMDE3NiA4LjQzMzA0QzE2LjExNSA4LjIwNTk4IDE2LjI5NDUgOCAxNi42ODQgOEgxOC4yMTU2QzE4LjY3ODcgOCAxOC43NzYxIDguMjM4MzkgMTguNjc4NyA4LjU2Mjg5QzE4LjQ4NCA5LjQ1NTA4IDE2LjYxOCAxMi4wODMxIDE2LjYxOCAxMi4wODMxQzE2LjQ1NTcgMTIuMzQyNyAxNi4zOTA4IDEyLjQ3MjUgMTYuNjE4IDEyLjc2NDVDMTYuNjk4IDEyLjg3NjQgMTYuODY4NyAxMy4wNDM2IDE3LjA2NCAxMy4yMzQ5QzE3LjI2NDggMTMuNDMxNiAxNy40OTE3IDEzLjY1MzggMTcuNjcyNyAxMy44Njc2QzE4LjMzMDYgMTQuNjA3NiAxOC44MjY0IDE1LjIzMTggMTguOTY0NiAxNS42NjIxQzE5LjA5MDggMTYuMDkzNyAxOC44NzIgMTYuMzEyNSAxOC40MzQzIDE2LjMxMjVIMTYuOTAyN0MxNi40OTI1IDE2LjMxMjUgMTYuMjg2IDE2LjA4MjggMTUuODM5NiAxNS41ODY0QzE1LjY1MDQgMTUuMzc1OSAxNS40MTgxIDE1LjExNzYgMTUuMTA5IDE0LjgwODVDMTQuMjAwMyAxMy45MzI1IDEzLjgxMDkgMTMuODE4OSAxMy41ODM3IDEzLjgxODlDMTMuMjc1NCAxMy44MTg5IDEzLjE4MzIgMTMuOTA2MiAxMy4xODMyIDE0LjM0MzdWMTUuNzE3QzEzLjE4MzIgMTYuMDkzNyAxMy4wNjI3IDE2LjMxMjUgMTIuMDg5MiAxNi4zMTI1QzEwLjQ2NjUgMTYuMzEyNSA4LjY4MzM1IDE1LjMyNzYgNy40MTc3MSAxMy41MTA3QzUuNTE5MjUgMTAuODUwMiA1IDguODM4NjQgNSA4LjQzMzA0QzUgOC4yMDU5OCA1LjA4NzUzIDggNS41MjUxMyA4WiIgZmlsbD0iIzI3ODdGNSIvPgo8L3N2Zz4K");
+        }
+
+        .vk:hover {
+            background-color: #4960df;
+        }
+
+        .facebook {
+            background-color: #415897;
+            -webkit-mask-image: url("data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgY2xpcC1ydWxlPSJldmVub2RkIiBkPSJNMTIgMjRDMTguNjI3NCAyNCAyNCAxOC42Mjc0IDI0IDEyQzI0IDUuMzcyNTggMTguNjI3NCAwIDEyIDBDNS4zNzI1OCAwIDAgNS4zNzI1OCAwIDEyQzAgMTguNjI3NCA1LjM3MjU4IDI0IDEyIDI0Wk0xMS4xOTU4IDYuMDM5MTdDMTEuODc5NCA1LjM3MzggMTIuODA2NiA1IDEzLjc3MzQgNUgxNS44MjI3QzE1LjkyMDYgNSAxNiA1LjA3NzI4IDE2IDUuMTcyNlY3Ljc4MDgyQzE2IDcuODc2MTUgMTUuOTIwNiA3Ljk1MzQyIDE1LjgyMjcgNy45NTM0MkgxMy43NzM0QzEzLjYxMTQgNy45NTM0MiAxMy40NTYgOC4wMTYwNiAxMy4zNDE1IDguMTI3NTZDMTMuMjI2OSA4LjIzOTA1IDEzLjE2MjYgOC4zOTAyNyAxMy4xNjI2IDguNTQ3OTVWMTAuNTIzM0gxNS44MDA1QzE1LjkxNTkgMTAuNTIzMyAxNi4wMDA2IDEwLjYyODggMTUuOTcyNiAxMC43Mzc4TDE1LjMwMjYgMTMuMzQ2QzE1LjI4MjkgMTMuNDIyOCAxNS4yMTIgMTMuNDc2NyAxNS4xMzA2IDEzLjQ3NjdIMTMuMTYyNlYxOC44Mjc0QzEzLjE2MjYgMTguOTIyNyAxMy4wODMyIDE5IDEyLjk4NTIgMTlIMTAuMzA1NEMxMC4yMDc1IDE5IDEwLjEyODEgMTguOTIyNyAxMC4xMjgxIDE4LjgyNzRWMTMuNDc2N0g4LjE3NzM0QzguMDc5NCAxMy40NzY3IDggMTMuMzk5NCA4IDEzLjMwNDFWMTAuNjk1OUM4IDEwLjYwMDYgOC4wNzk0IDEwLjUyMzMgOC4xNzczNCAxMC41MjMzSDEwLjEyODFWOC41NDc5NUMxMC4xMjgxIDcuNjA2OTcgMTAuNTEyMSA2LjcwNDU0IDExLjE5NTggNi4wMzkxN1oiIGZpbGw9IiMzQjU5OTgiLz4KPC9zdmc+Cg==");
+        }
+
+        .facebook:hover {
+            background-color: #5774c4;
+        }
+
+        .twitter {
+            background-color: #41ABE1;
+            -webkit-mask-image: url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iaXNvLTg4NTktMSI/Pg0KPCFET0NUWVBFIHN2ZyBQVUJMSUMgIi0vL1czQy8vRFREIFNWRyAxLjEvL0VOIiAiaHR0cDovL3d3dy53My5vcmcvR3JhcGhpY3MvU1ZHLzEuMS9EVEQvc3ZnMTEuZHRkIj4NCjxzdmcgdmVyc2lvbj0iMS4xIiBpZD0iQ2FwYV8xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB4PSIwcHgiIHk9IjBweCINCgkgdmlld0JveD0iMCAwIDk3Ljc1IDk3Ljc1IiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCA5Ny43NSA5Ny43NTsiIHhtbDpzcGFjZT0icHJlc2VydmUiDQoJPg0KPGc+DQoJPHBhdGggZD0iTTQ4Ljg3NSwwQzIxLjg4MiwwLDAsMjEuODgyLDAsNDguODc1UzIxLjg4Miw5Ny43NSw0OC44NzUsOTcuNzVTOTcuNzUsNzUuODY4LDk3Ljc1LDQ4Ljg3NVM3NS44NjgsMCw0OC44NzUsMHoNCgkJIE03OC40MywzNS44NDFjMC4wMjMsMC41NzcsMC4wMzUsMS4xNTUsMC4wMzUsMS43MzZjMCwyMC44NzgtMTUuODg3LDQyLjQ3My00Mi40NzMsNDIuNDczYy04LjEyNywwLTE2LjA0LTIuMzE5LTIyLjg4My02LjcwOA0KCQljLTAuMTQzLTAuMDkxLTAuMjAyLTAuMjY4LTAuMTQ1LTAuNDI3YzAuMDU3LTAuMTU4LDAuMjE4LTAuMjU2LDAuMzgzLTAuMjM3YzEuMTQ4LDAuMTM3LDIuMzIyLDAuMjA1LDMuNDg3LDAuMjA1DQoJCWM2LjMyMywwLDEyLjMwOS0xLjk1NSwxNy4zNzItNS42NjRjLTYuMDY5LTAuNTEyLTExLjI4NS00LjYxOS0xMy4xNjEtMTAuNDc4Yy0wLjAzOS0wLjEyMi0wLjAxMS0wLjI1NSwwLjA3My0wLjM1MQ0KCQljMC4wODUtMC4wOTYsMC4yMTUtMC4xMzgsMC4zMzktMC4xMTVjMS42ODIsMC4zMTksMy4zOTIsMC4zNCw1LjA0LDAuMDcyYy02LjI1OS0xLjk0NS0xMC42NTgtNy44MDgtMTAuNjU4LTE0LjQ4M2wwLjAwMi0wLjE5NA0KCQljMC4wMDMtMC4xMjcsMC4wNzItMC4yNDMsMC4xODItMC4zMDZjMC4xMDktMC4wNjQsMC4yNDUtMC4wNjUsMC4zNTUtMC4wMDNjMS42MzIsMC45MDYsMy40MzgsMS40ODgsNS4yOTEsMS43MTENCgkJYy0zLjU5Ny0yLjg2Ny01LjcwOS03LjIxMy01LjcwOS0xMS44NjJjMC0yLjY4MiwwLjcxLTUuMzE4LDIuMDU0LTcuNjIzYzAuMDYtMC4xMDMsMC4xNjYtMC4xNjksMC4yODQtMC4xNzgNCgkJYzAuMTE5LTAuMDEyLDAuMjM0LDAuMDQsMC4zMDksMC4xMzJjNy4zNjIsOS4wMywxOC4xOTEsMTQuNTksMjkuNzcxLDE1LjMwNWMtMC4xOTMtMC45NzItMC4yOTEtMS45NzQtMC4yOTEtMi45ODUNCgkJYzAtOC4zNjEsNi44MDItMTUuMTYyLDE1LjE2Mi0xNS4xNjJjNC4xMSwwLDguMDgyLDEuNjg5LDEwLjkyOSw0LjY0MWMzLjIwOS0wLjY1NCw2LjI2Ni0xLjgzNCw5LjA5LTMuNTA4DQoJCWMwLjEyOS0wLjA3NywwLjI5MS0wLjA2NSwwLjQxLDAuMDI4YzAuMTE2LDAuMDk0LDAuMTY0LDAuMjUsMC4xMTgsMC4zOTRjLTAuOTU3LDIuOTkzLTIuODIzLDUuNjA0LTUuMzMsNy40ODkNCgkJYzIuMzYxLTAuNDExLDQuNjUyLTEuMTA1LDYuODMxLTIuMDcyYzAuMTQ2LTAuMDY3LDAuMzE5LTAuMDI1LDAuNDI0LDAuMDk4YzAuMTA0LDAuMTI0LDAuMTEzLDAuMzAxLDAuMDIzLDAuNDM1DQoJCUM4My43NTksMzEuMTc1LDgxLjI5OSwzMy43NDQsNzguNDMsMzUuODQxeiIvPg0KPC9nPg0KPC9zdmc+DQo=");
+        }
+
+        .twitter:hover {
+            background-color: #49c0fc;
+        }
+
+        .ok {
+            background-color: #F3942D;
+            -webkit-mask-image: url("data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgY2xpcC1ydWxlPSJldmVub2RkIiBkPSJNMTIgMjRDMTguNjI3NCAyNCAyNCAxOC42Mjc0IDI0IDEyQzI0IDUuMzcyNTggMTguNjI3NCAwIDEyIDBDNS4zNzI1OCAwIDAgNS4zNzI1OCAwIDEyQzAgMTguNjI3NCA1LjM3MjU4IDI0IDEyIDI0Wk04LjUwNjM1IDguNjI3OTNDOC41MDYzNSA2LjYyNDMxIDEwLjEyMjMgNSAxMi4xMTU4IDVDMTQuMTA5MiA1IDE1LjcyNTIgNi42MjQzMSAxNS43MjUyIDguNjI3OTNDMTUuNzI1MiAxMC42MzE2IDE0LjEwOTIgMTIuMjU2IDEyLjExNTggMTIuMjU2QzEwLjEyMjMgMTIuMjU2IDguNTA2MzUgMTAuNjMxNiA4LjUwNjM1IDguNjI3OTNaTTEwLjYyMzcgOC42Mjc5OUMxMC42MjM3IDkuNDU2MjMgMTEuMjkxNyAxMC4xMjc3IDEyLjExNTggMTAuMTI3N0MxMi45Mzk4IDEwLjEyNzcgMTMuNjA3OCA5LjQ1NjIzIDEzLjYwNzggOC42Mjc5OUMxMy42MDc4IDcuNzk5NzQgMTIuOTM5OCA3LjEyODI4IDEyLjExNTggNy4xMjgyOEMxMS4yOTE3IDcuMTI4MjggMTAuNjIzNyA3Ljc5OTc0IDEwLjYyMzcgOC42Mjc5OVpNMTUuNzQ3IDE0LjEyMjFDMTUuNzAxMiAxNC4xNTkgMTQuODM1MyAxNC44NDY4IDEzLjM5MDMgMTUuMTQyN0wxNS41NzE0IDE3LjMxNTVDMTUuOTU1IDE3LjcwMDQgMTUuOTU1NSAxOC4zMjUgMTUuNTcyNSAxOC43MTA1QzE1LjE4OTYgMTkuMDk2IDE0LjU2ODMgMTkuMDk2NiAxNC4xODQ2IDE4LjcxMTZMMTIuMDY3IDE2LjYzODlMMTAuMTQzNyAxOC42OTgzQzkuOTUxMTUgMTguODk5IDkuNjk0MjggMTkgOS40MzcxNSAxOUM5LjE5MTkgMTkgOC45NDY0NSAxOC45MDgzIDguNzU2IDE4LjcyMzdDOC4zNjU4MSAxOC4zNDU1IDguMzU0NSAxNy43MjExIDguNzMwNzQgMTcuMzI4OUwxMC44MDExIDE1LjE1NDFDOS4zMTU1NiAxNC44NjUyIDguNDEzOSAxNC4xNTk1IDguMzY3NDcgMTQuMTIyMUM3Ljk0NDYzIDEzLjc4MTIgNy44NzY3MSAxMy4xNjA0IDguMjE1ODEgMTIuNzM1M0M4LjU1NDg2IDEyLjMxMDMgOS4xNzI0OCAxMi4yNDIxIDkuNTk1NDIgMTIuNTgyOEM5LjYwNDM1IDEyLjU5MDEgMTAuNTQ3MyAxMy4zMDIxIDEyLjA2NjYgMTMuMzAzM0gxMi4wNjdIMTIuMDY3NUMxMy41ODY4IDEzLjMwMiAxNC41MTAxIDEyLjU5MDEgMTQuNTE5IDEyLjU4MjhDMTQuOTQyIDEyLjI0MjEgMTUuNTU5NiAxMi4zMTAzIDE1Ljg5ODcgMTIuNzM1M0MxNi4yMzc4IDEzLjE2MDQgMTYuMTY5OCAxMy43ODEyIDE1Ljc0NyAxNC4xMjIxWiIgZmlsbD0iI0Y3OTMxRSIvPgo8L3N2Zz4K");
+        }
+
+        .ok:hover {
+            background-color: #ffa443;
+        }
+
+        .whatsapp {
+            background-color: #2CD469;
+            -webkit-mask-image: url("data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgY2xpcC1ydWxlPSJldmVub2RkIiBkPSJNMTYuNjI4IDAuOTAwNjUxQzE4LjA3ODkgMS40OTkzMSAxOS4zOTYgMi4zNzg2MSAyMC41MDMgMy40ODc1OUMyMS42MTU5IDQuNTkwMzggMjIuNDk4IDUuOTAxODkgMjMuMDk4MyA3LjM0NjIxQzIzLjY5ODUgOC43OTA1MyAyNC4wMDUgMTAuMzM5IDIzLjk5OTkgMTEuOTAxOUMyMy45OTc2IDE4LjQ1OSAxOC42MzYzIDIzLjc5NDEgMTIuMDUwNCAyMy43OTQxSDEyLjA0NTJDMTAuMDUwMSAyMy43OTQxIDguMDg2ODIgMjMuMjk2NCA2LjMzNDg5IDIyLjM0NjNMMCAyNEwxLjY5NTQ1IDE3LjgzNjlDMC42NDc2ODcgMTYuMDI5MiAwLjA5NzQ1ODcgMTMuOTc4NSAwLjEwMDI3MiAxMS44OTE3QzAuMTAyNTY0IDUuMzM0NTcgNS40NjMzOSA0LjE5OTg3ZS0wNSAxMi4wNTA0IDQuMTk5ODdlLTA1QzEzLjYyMTEgLTAuMDA0MTI2MTIgMTUuMTc3IDAuMzAxOTkxIDE2LjYyOCAwLjkwMDY1MVpNMTUuNDU4MSAxMy40MTAzQzE1LjczMiAxMy41MTIzIDE3LjIgMTQuMjMwOCAxNy40OTg1IDE0LjM3OTdWMTQuMzgxOUMxNy41NjE5IDE0LjQxMzUgMTcuNjIwNSAxNC40NDE1IDE3LjY3NDIgMTQuNDY3MkMxNy44NzM2IDE0LjU2MjMgMTguMDA1OCAxNC42MjU1IDE4LjA2NjMgMTQuNzIyOUMxOC4xNDMxIDE0Ljg0NjcgMTguMTQzNyAxNS40NDIgMTcuODk0NCAxNi4xMzZDMTcuNjQ1MiAxNi44MyAxNi40NTE3IDE3LjQ2MzUgMTUuODc4NyAxNy41NDlDMTUuMzY0MSAxNy42MjU0IDE0LjcxMzIgMTcuNjU5MSAxMy45OTgxIDE3LjQzMUMxMy40MjAxIDE3LjI1MTcgMTIuODUxOCAxNy4wNDIzIDEyLjI5NTggMTYuODAzN0M5LjQ5NTc0IDE1LjU5OTUgNy42MDI4NyAxMi44OTYzIDcuMjQ3NzEgMTIuMzg5MUM3LjIyMzEzIDEyLjM1NCA3LjIwNTkxIDEyLjMyOTQgNy4xOTYyNyAxMi4zMTY2TDcuMTkyNjkgMTIuMzExOEM3LjAzMDk3IDEyLjA5NjUgNS45Nzc1NCAxMC42OTM5IDUuOTc3NTQgOS4yNDI0NEM1Ljk3NzU0IDcuODc0NzUgNi42NTE4OCA3LjE1NzczIDYuOTYyOSA2LjgyNzAyQzYuOTg0NSA2LjgwNDA2IDcuMDA0MzQgNi43ODI5NiA3LjAyMjA5IDYuNzYzNjRDNy4xMjE4OCA2LjY1MDM0IDcuMjQ0MTYgNi41NTg4MiA3LjM4MTIzIDYuNDk0ODNDNy41MTgzIDYuNDMwODUgNy42NjcxOSA2LjM5NTc4IDcuODE4NTMgNi4zOTE4NUM4LjAxNzkzIDYuMzkxODUgOC4yMTk2MiA2LjM5MzU2IDguMzkxNTEgNi40MDIxMUM4LjQxMzY5IDYuNDAzNTYgOC40MzY3NyA2LjQwMzY5IDguNDYwNjYgNi40MDM4MkM4LjYzNDI3IDYuNDA0ODEgOC44NDk5OSA2LjQwNjAyIDkuMDYzMDUgNi45MTUzMkM5LjE0NDQ1IDcuMTEgOS4yNjMyNCA3LjM5NzY4IDkuMzg4ODMgNy43MDE4M0M5LjY0NjkxIDguMzI2ODUgOS45MzM3MyA5LjAyMTQ0IDkuOTgzODMgOS4xMjE1NUMxMC4wNTgzIDkuMjcwMzggMTAuMTA3NiA5LjQ0MzczIDEwLjAwODUgOS42NDIxN0M5Ljk5NDg2IDkuNjY5NDIgOS45ODIxNyA5LjY5NTI0IDkuOTcwMDEgOS43MTk5OEM5Ljg5MzY0IDkuODc1MzkgOS44Mzg0NyA5Ljk4NzY2IDkuNzA5OTUgMTAuMTM3N0M5LjY2MTY4IDEwLjE5NCA5LjYxMTggMTAuMjU0NiA5LjU2MTg1IDEwLjMxNTJDOS40NTc2MSAxMC40NDE3IDkuMzUzMDkgMTAuNTY4NSA5LjI2MjQ1IDEwLjY1ODNDOS4xMTI5IDEwLjgwODkgOC45NTkzNCAxMC45Njc0IDkuMTMxMjMgMTEuMjY1MUM5LjMwMzEzIDExLjU2MjcgOS45MDUzMyAxMi41MzU1IDEwLjc5MjkgMTMuMzIzNkMxMS43NDY4IDE0LjE3IDEyLjU3NTggMTQuNTI3OSAxMi45OTYzIDE0LjcwOTVDMTMuMDc4NyAxNC43NDUgMTMuMTQ1NCAxNC43NzM4IDEzLjE5NDMgMTQuNzk4MkMxMy40OTI4IDE0Ljk0NyAxMy42NjcgMTQuOTIyNSAxMy44NDExIDE0LjcyNDFDMTQuMDE1MyAxNC41MjU2IDE0LjU4NzcgMTMuODU2OCAxNC43ODY2IDEzLjU1OTFDMTQuOTg1NCAxMy4yNjE0IDE1LjE4NDIgMTMuMzA4MiAxNS40NTgxIDEzLjQxMDNaIiBmaWxsPSIjMjVEMzY2Ii8+Cjwvc3ZnPgo=");
+        }
+
+        .whatsapp:hover {
+            background-color: #30f177;
+        }
+
+        .telegram {
+            background-color: #2BA4E0;
+            -webkit-mask-image: url("data:image/svg+xml;base64,PHN2ZyBpZD0iQm9sZCIgZW5hYmxlLWJhY2tncm91bmQ9Im5ldyAwIDAgMjQgMjQiIGhlaWdodD0iNTEyIiB2aWV3Qm94PSIwIDAgMjQgMjQiIHdpZHRoPSI1MTIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0ibTEyIDI0YzYuNjI5IDAgMTItNS4zNzEgMTItMTJzLTUuMzcxLTEyLTEyLTEyLTEyIDUuMzcxLTEyIDEyIDUuMzcxIDEyIDEyIDEyem0tNi41MDktMTIuMjYgMTEuNTctNC40NjFjLjUzNy0uMTk0IDEuMDA2LjEzMS44MzIuOTQzbC4wMDEtLjAwMS0xLjk3IDkuMjgxYy0uMTQ2LjY1OC0uNTM3LjgxOC0xLjA4NC41MDhsLTMtMi4yMTEtMS40NDcgMS4zOTRjLS4xNi4xNi0uMjk1LjI5NS0uNjA1LjI5NWwuMjEzLTMuMDUzIDUuNTYtNS4wMjNjLjI0Mi0uMjEzLS4wNTQtLjMzMy0uMzczLS4xMjFsLTYuODcxIDQuMzI2LTIuOTYyLS45MjRjLS42NDMtLjIwNC0uNjU3LS42NDMuMTM2LS45NTN6Ii8+PC9zdmc+");
+        }
+
+        .telegram:hover {
+            background-color: #26b7ff;
+        }
+
+        #page {
+            display: none;
+            width: 100%;
+        }
+
+        .block {
+            height: 598px;
+            width: 442px;
+            margin: auto;
+            transition: all 0.3s ease-in-out;
+            border-radius: 5px;
+            background: linear-gradient(145deg, #FFB890 -0.77%, #FE61BF 27.71%, #90D7FF 66.2%, #61FEA0 100.48%);
+            background-position: 0% 50%;
+            background-size: 300% 100%;
+        }
+
+        .menu {
+            width: 280px;
+            display: flex;
+            flex-flow: column;
+            overflow-y: scroll;
+            overflow-x: hidden;
+            height: 100vh;
+            flex-shrink: 0;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .menu .colors>.color>div:first-of-type>span {
+            display: flex;
+        }
+
+        .menu .colors>.color>div:first-of-type>p {
+            margin: 0;
+            margin-bottom: 10px;
+            display: flex;
+            height: 40px;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .delete-color {
+            display: flex;
+            min-width: 40px;
+            height: 40px;
+            border-radius: 5px;
+            background-color: #f14a4a;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .delete-color>span {
+            display: block;
+            width: 24px;
+            height: 24px;
+            margin: auto;
+            background-color: #ffffff;
+            -webkit-mask-image: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTQuNzk5OCA2LjZIMTkuMTk5OEwxNy43Nzc4IDE5LjM5OEMxNy43MjkxIDE5LjgzODQgMTcuNTE5NiAyMC4yNDU0IDE3LjE4OTQgMjAuNTQxQzE2Ljg1OTMgMjAuODM2NiAxNi40MzE3IDIxIDE1Ljk4ODYgMjFIOC4wMTFDNy41Njc4OCAyMSA3LjE0MDMxIDIwLjgzNjYgNi44MTAxOCAyMC41NDFDNi40ODAwNSAyMC4yNDU0IDYuMjcwNTUgMTkuODM4NCA2LjIyMTggMTkuMzk4TDQuNzk5OCA2LjZaIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8cGF0aCBkPSJNNy44MTAxMSA0LjAzMjNDNy45NTU2OSAzLjcyMzU3IDguMTg2MDUgMy40NjI2IDguNDc0MzEgMy4yNzk4MkM4Ljc2MjU4IDMuMDk3MDQgOS4wOTY4OCAzIDkuNDM4MjEgM0gxNC41NjFDMTQuOTAyNSAyLjk5OTgzIDE1LjIzNyAzLjA5Njc5IDE1LjUyNTQgMy4yNzk1OEMxNS44MTM5IDMuNDYyMzcgMTYuMDQ0NCAzLjcyMzQzIDE2LjE5IDQuMDMyM0wxNy4zOTk2IDYuNkg2LjU5OTYxTDcuODEwMTEgNC4wMzIzWiIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPHBhdGggZD0iTTMgNi42SDIxIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8cGF0aCBkPSJNMTAuMjAwMiAxMS4xVjE1LjYiIHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CjxwYXRoIGQ9Ik0xMy43OTk4IDExLjFWMTUuNiIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+Cg==");
+        }
+
+        .delete-color:hover {
+            background-color: #f36363;
+            cursor: pointer;
+        }
+
+        .delete-color:active {
+            background-color: #db3a3a;
+        }
+
+        .menu .colors>.color>div:last-of-type>p {
+            margin: 10px 0;
+        }
+
+        .pre {
+            font-family: monospace;
+            margin: 1em 0em;
+            padding: 10px;
+            border-radius: 5px;
+            line-height: 20px;
+            margin-top: 5px;
+            background-color: #d1d5ef;
+            overflow: auto;
+        }
+
+        .pre::-webkit-scrollbar {
+            width: 5px;
+            height: 6px;
+        }
+
+        .pre::-webkit-scrollbar-track {
+            background-color: #f9f9f9;
+        }
+
+        .pre::-webkit-scrollbar-thumb {
+            height: 1px;
+            background-color: #aeaeff;
+        }
+
+        .menu button,
+        .primary {
+            position: relative;
+            display: inline-flex;
+            box-sizing: border-box;
+            border: 1px solid;
+            border-radius: 5px;
+            outline: none;
+            user-select: none;
+            cursor: pointer;
+            transition: all 0.3s, color 0s;
+            padding: 8px 4px 8px 4px;
+            line-height: 15px;
+            width: 100%;
+            margin-bottom: 10px;
+            text-align: center;
+            justify-content: center;
+            background-color: #3f51b5;
+            color: #ffffff;
+            border-color: #3f51b5;
+        }
+
+        .menu button {
+            margin-bottom: 0;
+            margin-top: 10px;
+        }
+
+        .primary:hover {
+            background-color: #4960df;
+        }
+
+        .primary:active {
+            background-color: #32408f;
+        }
+
+        button.reset {
+            background-color: #f36363;
+            border-color: #f36363;
+        }
+
+        button.reset:hover {
+            background-color: #f14a4a;
+            border-color: #f14a4a;
+        }
+
+        button.reset:active {
+            background-color: #db3a3a;
+            border-color: #db3a3a;
+        }
+
+        button.save {
+            background-color: #087D14;
+            border-color: #087D14;
+        }
+
+        button.save:hover {
+            background-color: #0EAB1E;
+            border-color: #0EAB1E;
+        }
+
+        button.save:active {
+            background-color: #055E0E;
+            border-color: #055E0E;
+        }
+
+        button.link {
+            background-color: #a103a1;
+            border-color: #a103a1;
+        }
+
+        button.link:hover {
+            background-color: #c705c7;
+            border-color: #c705c7;
+        }
+
+        button.link:active {
+            background-color: #800080;
+            border-color: #800080;
+        }
+
+        button.button-gradient {
+            transition: all 0.3s ease-in-out;
+            border: none;
+            background: linear-gradient(92.59deg, #f9028a, #484db2, #f841aa, #5c45fb) 0% 50% / 300% 100%;
+        }
+
+        button.button-gradient:hover {
+            background-position: 55% 50% !important;
+        }
+
+        button:disabled {
+            background-color: #d6d6e1 !important;
+            border-color: #d6d6e1 !important;
+            cursor: default !important;
+        }
+
+        .menu::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .menu::-webkit-scrollbar-track {
+            background-color: #f9f9f9;
+        }
+
+        .menu::-webkit-scrollbar-thumb {
+            height: 1px;
+            background-color: #d6d6e1;
+        }
+
+        .item>div {
+            margin-bottom: 10px;
+            width: -webkit-fill-available;
+        }
+
+        .item>.colors>.color {
+            margin-bottom: 30px;
+        }
+
+        .item>.colors>.color:last-of-type {
+            margin-bottom: 0;
+        }
+
+        .item>div>p {
+            margin: 0;
+            margin-bottom: 10px;
+        }
+
+        input {
+            box-sizing: border-box;
+            border-radius: 5px;
+            outline: none;
+            border: 1px solid transparent;
+            font: inherit;
+            overflow-x: hidden;
+            text-overflow: ellipsis;
+            height: 40px;
+            width: 100%;
+            padding: 0 10px;
+            background-color: #ebf0f9;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .item {
+            display: flex;
+            flex-flow: column;
+            align-items: center;
+            width: -webkit-fill-available;
+            border-radius: 5px;
+            padding: 0 10px;
+            margin: 10px 0;
+        }
+
+        .code {
+            padding: 0 10px;
+        }
+
+        .item>h3 {
+            margin: 0;
+            margin-bottom: 10px;
+            width: 100%;
+        }
+
+        .item>label {
+            display: flex;
+            align-items: center;
+            width: fit-content;
+            align-self: flex-start;
+            margin-bottom: 20px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .item>label>input {
+            width: 20px;
+            height: 20px;
+            margin: 0;
+            margin-right: 10px;
+            display: none;
+        }
+
+        .item>label>.cirlce {
+            min-width: 20px;
+            height: 20px;
+            margin: 0;
+            margin-right: 10px;
+            border-radius: 50%;
+            transition: all 0.3s ease-in-out;
+            background-color: #ffffff;
+            position: relative;
+            filter: drop-shadow(0px 0px 1px black);
+        }
+
+        .item>label>.cirlce::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            background-color: #3f51b5;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            transition: all 0.3s ease-in-out;
+            transform: scale(0);
+        }
+
+        .item>label:hover>.cirlce {
+            filter: drop-shadow(0px 0px 2px black);
+        }
+
+        .item>label>.cirlce.checked {
+            filter: drop-shadow(0px 0px 2px #3f51b5);
+        }
+
+        .item>label>.cirlce.checked::after {
+            transform: scale(0.7);
+        }
+
+        .item>label.checkbox {
+            display: flex;
+            outline: none;
+            cursor: pointer;
+            align-items: center;
+            width: fit-content;
+        }
+
+        .item>label.checkbox:last-of-type {
+            margin-bottom: 0;
+        }
+
+        .item>label.checkbox>input {
+            display: none;
+        }
+
+        .item>label.checkbox>.check-mark {
+            width: 21px;
+            height: 21px;
+            margin: auto 9px auto 0;
+            border-radius: 5px;
+            background-color: #ffffff;
+            border: 1.5px solid #596175;
+            transition: all 0.2s ease-in-out;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .item>label.checkbox>.check-mark::after,
+        .item>label.checkbox>.check-mark::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 21px;
+            height: 21px;
+            display: block;
+            z-index: 1;
+            transition: all 0.3s ease-in-out;
+            transform: scale(0);
+            opacity: 0;
+        }
+
+        .item>label.checkbox>.check-mark::after {
+            background: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iOSIgdmlld0JveD0iMCAwIDEyIDkiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxwYXRoIGQ9Ik0xMSAxTDQuNTM4NDYgOEwxLjUgNC41IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPgo=") no-repeat center center;
+        }
+
+        .item>label.checkbox>.check-mark::before {
+            border-radius: 5px;
+        }
+
+        .item>label.checkbox>.check-mark.checked::after,
+        .item>label.checkbox>.check-mark.checked::before {
+            transform: scale(1.3);
+            opacity: 1;
+        }
+
+        .item>label.checkbox>.check-mark.checked {
+            border-color: #3f51b5;
+        }
+
+        .item>label.checkbox>.check-mark.checked::before {
+            background-color: #3f51b5;
+        }
+
+        .item>label.checkbox:hover>.check-mark {
+            transition: 0.2s;
+            border-color: #3f51b5;
+        }
+
+        .two-input-in-string>div {
+            display: flex;
+        }
+
+        .two-input-in-string>div>div>span {
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .two-input-in-string>div>div:last-of-type {
+            margin-left: 10px;
+        }
+
+        .block:hover {
+            background-position: 100% 50% !important;
+        }
+    </style>
+</head>
+
+<body onload="init()">
+    <div class="notice">
+        <div>
+            <h1 id="noticeText"></h1>
+            <div id="share">
+                <span class="close" onclick="closeModal()"></span>
+                <p>Выберите соц.сеть/мессенджер, где хотите поделиться ссылкой на градиент, или просто скопируйте ссылку
+                </p>
+                <div>
+                    <span class="social vk" onclick="share('vk')" title="Поделиться Вконтакте"></span>
+                    <span class="social facebook" onclick="share('facebook')" title="Поделиться в Facebook"></span>
+                    <span class="social twitter" onclick="share('twitter')" title="Поделиться в Twitter"></span>
+                    <span class="social ok" onclick="share('ok')" title="Поделиться в Одноклассниках"></span>
+                    <span class="social whatsapp" onclick="share('whatsapp')" title="Поделиться в Whatsapp"></span>
+                    <span class="social telegram" onclick="share('telegram')" title="Поделиться в Telegram"></span>
+                </div>
+                <button class="primary" onclick="share()">Копировать ссылку</button>
+            </div>
+        </div>
+    </div>
+    <div id="page">
+        <div class="menu">
+            <div class="item">
+                <h3>Блок</h3>
+                <div>
+                    <p>Ширина</p>
+                    <input type="text" id="width" placeholder="в пикселях" oninput="changeInput('width')">
+                </div>
+                <div>
+                    <p>Высота</p>
+                    <input type="text" id="height" placeholder="в пикселях" value="598" oninput="changeInput('height')">
+                </div>
+                <div>
+                    <p>Радиус скругления</p>
+                    <input type="text" id="borderRadius" placeholder="в пикселях или %" value="5px"
+                        oninput="changeInput('borderRadius')">
+                </div>
+            </div>
+            <div class="item">
+                <h3>Цвет</h3>
+                <div class="colors" id="colors"></div>
+                <button onclick="addColor()">Добавить цвет</button>
+            </div>
+            <div class="item">
+                <h3>Направление градиента</h3>
+                <label>
+                    <input type="radio" id="top" value="to top" onchange="radio(this.id)">
+                    <span class="cirlce"></span>
+                    <span>Снизу вверх</span>
+                </label>
+                <label>
+                    <input type="radio" id="left" value="to left" onchange="radio(this.id)">
+                    <span class="cirlce"></span>
+                    <span>Справа налево</span>
+                </label>
+                <label>
+                    <input type="radio" id="bottom" value="to bottom" onchange="radio(this.id)">
+                    <span class="cirlce"></span>
+                    <span>Сверху вниз</span>
+                </label>
+                <label>
+                    <input type="radio" id="right" value="to right" onchange="radio(this.id)">
+                    <span class="cirlce"></span>
+                    <span>Слева направо</span>
+                </label>
+                <label>
+                    <input type="radio" id="top-left" value="to top left" onchange="radio(this.id)">
+                    <span class="cirlce"></span>
+                    <span>От правого нижнего угла к левому верхнему</span>
+                </label>
+                <label>
+                    <input type="radio" id="top-right" value="to top right" onchange="radio(this.id)">
+                    <span class="cirlce"></span>
+                    <span>От левого нижнего угла к правому верхнему</span>
+                </label>
+                <label>
+                    <input type="radio" id="bottom-left" value="to bottom left" onchange="radio(this.id)">
+                    <span class="cirlce"></span>
+                    <span>От правого верхнего угла к левому нижнему</span>
+                </label>
+                <label>
+                    <input type="radio" id="bottom-right" value="to bottom right" onchange="radio(this.id)">
+                    <span class="cirlce"></span>
+                    <span>От левого верхнего угла к правому нижнему</span>
+                </label>
+                <label>
+                    <input type="radio" id="custom-gradient-deg" value="deg" onchange="radio(this.id)">
+                    <span class="cirlce"></span>
+                    <span>В градусах</span>
+                </label>
+                <div id="gradient-deg">
+                    <input type="text" id="deg" placeholder="deg" value="145"
+                        oninput="changeInput('deg', 'changeGradientDeg')">
+                </div>
+            </div>
+            <div class="item">
+                <h3>Масштаб градиента в %</h3>
+                <div class="two-input-in-string">
+                    <div>
+                        <div>
+                            <span>Ширина</span>
+                            <input type="text" id="backgroundSizeWidth" placeholder="ширина" value="300"
+                                oninput="changeInput('backgroundSizeWidth', 'changeBackgroundSize')">
+                        </div>
+                        <div>
+                            <span>Высота</span>
+                            <input type="text" id="backgroundSizeHeight" placeholder="высота" value="100"
+                                oninput="changeInput('backgroundSizeHeight', 'changeBackgroundSize')">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="item">
+                <h3>Позиция градиента в %</h3>
+                <div class="two-input-in-string">
+                    <div>
+                        <div>
+                            <span>По оси X</span>
+                            <input type="text" id="backgroundPositionX" placeholder="x" value="0"
+                                oninput="changeInput('backgroundPositionX', 'changeBackgroundPosition')">
+                        </div>
+                        <div>
+                            <span>По оси Y</span>
+                            <input type="text" id="backgroundPositionY" placeholder="y" value="50"
+                                oninput="changeInput('backgroundPositionY', 'changeBackgroundPosition')">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="item">
+                <h3>Смещение позиции градиента при наведении в %</h3>
+                <div class="two-input-in-string">
+                    <div>
+                        <div>
+                            <span>По оси X</span>
+                            <input type="text" id="backgroundPositionHoverX" placeholder="x" value="100"
+                                oninput="changeInput('backgroundPositionHoverX', 'changeBackgroundPositionHover')">
+                        </div>
+                        <div>
+                            <span>По оси Y</span>
+                            <input type="text" id="backgroundPositionHoverY" placeholder="y" value="50"
+                                oninput="changeInput('backgroundPositionHoverY', 'changeBackgroundPositionHover')">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="item">
+                <h3>Скорость анимации в секундах</h3>
+                <div>
+                    <input type="text" id="transitionDuration" placeholder="секунды" value="0.3"
+                        oninput="changeInput('transitionDuration', 'changeAutoAnimation')">
+                </div>
+            </div>
+            <div class="code">
+                <p>Весь код</p>
+                <div id="code"></div>
+                <p>Код градиента</p>
+                <div id="gradient"></div>
+            </div>
+            <div class="item">
+                <button onclick="copyAllCode()">Копировать весь код</button>
+                <button onclick="copyGradient()" class="button-gradient">Копировать только градиент</button>
+                <button onclick="copyLink()" class="link" id="link">Поделиться ссылкой на градиент</button>
+                <button onclick="save()" id="save" disabled class="save">Сохранить</button>
+                <button onclick="reset()" id="reset" class="reset">Сбросить настройки</button>
+            </div>
+            <div class="item">
+                <label id="autosave-block" class="checkbox">
+                    <input type="checkbox" id="autosave" checked onchange="changeAutosave()">
+                    <span class="check-mark checked" id="autosave-check-mark"></span>
+                    <span>Автосохранение</span>
+                </label>
+                <label class="checkbox">
+                    <input type="checkbox" id="auto-animation" onchange="changeAutoAnimation()">
+                    <span class="check-mark" id="auto-animation-check-mark"></span>
+                    <span>Автовоспроизведение анимации</span>
+                </label>
+            </div>
+        </div>
+        <div class="block" id="block"></div>
+        <script src="jscolor.js"></script>
+        <script>
+            jscolor.presets.default = {
+                format: 'hex', previewPosition: 'right', borderRadius: 5, required: false, previewSize: 40
+            }
+
+            let autoAnimationTimeoutID = undefined
+            let canSaved = false
+            let autoAnimation = false
+
+            // функция переводит объект настроек в JSON, далее кодирует все в строку состоящую из символов 16-ричной системы счисления
+            function encode() {
+                return JSON.stringify(settings).split("").map(v => v.charCodeAt(0).toString(16)).join("")
+            }
+
+function setData(s, isRepeat) {
+    const res = s.split("").map(v => v.charCodeAt(0).toString(isRepeat ? 14 : 16)).join("")
+
+    return isRepeat ? res : setData(res, true)
+}
+
+function getData(s, isRepeat) {
+    const res = s.length < 1 ? undefined : s.split(/(?=(?:..)*$)/).map(v => String.fromCharCode(parseInt(v, isRepeat ? 16 : 14))).join("")
+
+    return isRepeat ? res : getData(res, true)
+}
+
+function encode1(s) {
+    return s.split("").map(v => v.charCodeAt(0).toString(16)).join("")
+}
+
+function decode1(s) {
+    return s.length < 1 ? undefined : JSON.parse(s.map(v => String.fromCharCode(parseInt(v, 16))).join(""))
+}
+
+function decode2(s) {
+    return s.length < 1 ? undefined : JSON.parse(s.split(/(?=(?:..)*$)/).map(v => String.fromCharCode(parseInt(v, 14))).join(""))
+}
+            // функция декодирует строку состоящую из символов 16-ричной системы счисления и переводит в объект настроек
+            function decode(s) {
+                return s.length < 1 ? undefined : JSON.parse(s.split(/(?=(?:..)*$)/).map(v => String.fromCharCode(parseInt(v, 16))).join(""))
+            }
+
+
+            const hasLink = window.location.search.length > 0
+
+            const defaultSettings = {
+                autosave: true,
+                colors: [{ color: "#FFB890", colorLength: "" }, { color: "#FE61BF", colorLength: "" }, { color: "#90D7FF", colorLength: "" }, { color: "#61FEA0", colorLength: "" }],
+                radioCheckedID: "custom-gradient-deg",
+                height: 598,
+                width: 442,
+                borderRadius: "5px",
+                deg: 145,
+                transitionDuration: "0.3",
+                backgroundSizeWidth: 300,
+                backgroundSizeHeight: 100,
+                backgroundPositionX: 0,
+                backgroundPositionY: 50,
+                backgroundPositionHoverX: 100,
+                backgroundPositionHoverY: 50,
+            }
+
+            if (hasLink) {
+                document.getElementById("autosave-block").style.display = "none"
+                document.getElementById("save").style.display = "none"
+            }
+
+            let savedSettings = JSON.parse(localStorage.getItem("settings") ?? "{}")
+            let settings = hasLink ? decode(window.location.search.slice(1)) : JSON.parse(JSON.stringify(Object.keys(savedSettings).length > 0 ? savedSettings : defaultSettings))
+
+            let isEnabledReset = false
+            let noticeText = ""
+            let block = document.getElementById("block")
+            let gradientDeg = settings.radioCheckedID === "custom-gradient-deg" ? settings.deg.length > 0 ? `${settings.deg}deg, ` : "0deg, " : `${document.getElementById(`${settings.radioCheckedID}`).value}, `
+            let gradientColor = ""
+            let gradient = `linear-gradient(${gradientDeg}${gradientColor})`
+            let backgroundPosition = `${settings.backgroundPositionX || 0}% ${settings.backgroundPositionY || 0}%`
+            let backgroundPositionHover = `${settings.backgroundPositionHoverX || 0}% ${settings.backgroundPositionHoverY || 0}%`
+            let backgroundSize = `${settings.backgroundSizeWidth || 0}% ${settings.backgroundSizeHeight || 0}%`
+
+            function checkEnabledSave(isReset) {
+                if (isReset) {
+                    anSaved = false
+                    document.getElementById("save").disabled = true
+                    return
+                }
+
+                if (settings.autosave) {
+                    return
+                }
+
+                const localStorageSettings = JSON.parse(localStorage.getItem("settings") ?? "{}")
+
+                if (Object.values(settings).some((s, i) => (typeof s === "number" ? `${s}` : Array.isArray(s) ? JSON.stringify(s) : s) !== (typeof Object.values(localStorageSettings)[i] === "number" ? `${Object.values(localStorageSettings)[i]}` : Array.isArray(Object.values(localStorageSettings)[i]) ? JSON.stringify(Object.values(localStorageSettings)[i]) : Object.values(localStorageSettings)[i]))) {
+                    document.getElementById("save").disabled = false
+                    canSaved = true
+                } else {
+                    canSaved = false
+                    document.getElementById("save").disabled = true
+                }
+            }
+
+            function checkEnabledReset() {
+                if (Object.values(defaultSettings).some((s, i) => (typeof s === "number" ? `${s}` : Array.isArray(s) ? JSON.stringify(s) : s) !== (typeof Object.values(settings)[i] === "number" ? `${Object.values(settings)[i]}` : Array.isArray(Object.values(settings)[i]) ? JSON.stringify(Object.values(settings)[i]) : Object.values(settings)[i]))) {
+                    document.getElementById("reset").disabled = false
+                    isEnabledReset = true
+                } else {
+                    isEnabledReset = false
+                    document.getElementById("reset").disabled = true
+                }
+            }
+
+            function changeCode() {
+                let preGradientColor = ""
+                for (const i in settings.colors) {
+                    preGradientColor += `${settings.colors[i].color.length > 0
+                        ? `${settings.colors[i].color}${settings.colors[i].colorLength.length > 0
+                            ? ` ${settings.colors[i].colorLength}%${(settings.colors[Number(i) + 1]?.color ?? "").length > 0 ? ", " : ""}`
+                            : `${(settings.colors[Number(i) + 1]?.color ?? "").length > 0 ? ", " : ""}`
+                        }`
+                        : `${settings.colors[Number(i) - 1]?.color.length > 0 && (settings.colors[Number(i) + 1]?.color ?? "").length > 0 ? ", " : ""}`
+                        }`
+                }
+                const preGradientDeg = settings.radioCheckedID === "custom-gradient-deg" ? settings.deg.length > 0 ? `${settings.deg}deg, ` : `0deg, ` : `${document.getElementById(`${settings.radioCheckedID}`).value}, `
+                const preGradient = `linear-gradient(${preGradientDeg}${preGradientColor})`
+
+                const preBackgroundPositionElement = `${backgroundPosition}`
+                const preBackgroundPositionHoverElement = `${backgroundPositionHover}`
+                const preBackgroundSizeElement = `${backgroundSize}`
+
+                const styles = document.head.innerText
+                const indexImportant = styles.search("!important;")
+                const lastIndexBackgroundPosotion = styles.lastIndexOf("background-position:")
+                const replacedStyles = `
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gradient Sandbox</title>
+<style>` + styles.trim().replace("Gradient Sandbox", "").replace(/\n/, "").replace(`background-position: ${styles.substr(lastIndexBackgroundPosotion + 21, indexImportant)}`, `background-position: ${backgroundPositionHover.length > 0 ? `${backgroundPositionHover} !important;` : "100% 50% !important;"}}`) + "</style>"
+
+                document.head.innerHTML = replacedStyles
+                const source =
+                    `<pre class="pre">
+.block {
+    width: ${settings.width}px;
+    height: ${settings.height}px;
+    border-radius: ${settings.borderRadius};
+    background: ${preGradient} ${backgroundPosition.length > 0 ? `${preBackgroundPositionElement}` : `0% 50%`} ${backgroundSize.length > 0 ? `/ ${preBackgroundSizeElement}` : `/ 300% 100%`};
+    transition: all ${settings.transitionDuration}s ease-in-out;
+}
+
+.block:hover {
+    background-position: ${backgroundPositionHover.length > 0 ? `${backgroundPositionHover}` : `100% 50%`};
+}
+</pre>
+`
+
+                const sourceGradient = `<pre class="pre">${preGradient};</pre>`
+
+                document.getElementById("code").innerHTML = source
+                document.getElementById("gradient").innerHTML = sourceGradient
+            }
+
+            function apply(needSave) {
+                checkEnabledReset()
+                gradientColor = ""
+                for (const i in settings.colors) {
+                    gradientColor += `${settings.colors[i].color.length > 0
+                        ? `${settings.colors[i].color}${settings.colors[i].colorLength.length > 0
+                            ? ` ${settings.colors[i].colorLength}%${(settings.colors[Number(i) + 1]?.color ?? "").length > 0 ? ", " : ""}`
+                            : `${(settings.colors[Number(i) + 1]?.color ?? "").length > 0 ? ", " : ""}`
+                        }`
+                        : `${settings.colors[Number(i) - 1]?.color.length > 0 && (settings.colors[Number(i) + 1]?.color ?? "").length > 0 ? ", " : ""}`
+                        }`
+                }
+                gradient = `linear-gradient(${gradientDeg}${gradientColor})`
+
+                changeCode()
+
+                block.style.height = `${settings.height.length > 0 ? `${settings.height}px` : "598px"}`
+                block.style.width = `${settings.width.length > 0 ? `${settings.width}px` : "442px"}`
+                block.style.background = gradient
+                block.style.backgroundPosition = `${backgroundPosition.length > 0 ? `${backgroundPosition}` : "0% 50%"}`
+                block.style.backgroundSize = `${backgroundSize.length > 0 ? `${backgroundSize}` : "300% 100%"}`
+                block.style.transitionDuration = `${settings.transitionDuration.length > 0 ? `${settings.transitionDuration}` : "0"}s`
+                block.style.borderRadius = `${settings.borderRadius.length > 0 ? `${settings.borderRadius}` : "0"}`
+
+
+                if (!hasLink && (settings.autosave || needSave)) {
+                    localStorage.setItem("settings", JSON.stringify(settings))
+                    savedSettings = JSON.parse(JSON.stringify(settings))
+                }
+
+                checkEnabledSave()
+            }
+
+            function changeInput(name, evalName, isApply, isReset) {
+                if (Array.isArray(name)) {
+                    for (const i of name) {
+                        const input = document.getElementById(i.name)
+
+                        if (isReset) {
+                            input.value = defaultSettings[i.name]
+                            if (i.eval !== undefined) {
+                                if (i.eval === "changeAutoAnimation") {
+                                    eval(i.eval)(true, true)
+                                } else {
+                                    eval(i.eval)(true)
+                                }
+                            }
+                        } else if (isApply) {
+                            input.value = settings[i.name]
+                            if (i.eval !== undefined) {
+                                eval(i.eval)(true)
+                            }
+                        }
+                    }
+
+                    return
+                }
+
+                const input = document.getElementById(name)
+
+                if (input.value.length === 0) {
+                    input.value = 0
+                }
+
+                if (name === "borderRadius") {
+                    let value = input.value
+                    if (value.length > 1 && /^0/.test(value)) {
+                        value = value.slice(1)
+                        input.value = value
+                    }
+                    settings[name] = value.length > 0 && !/(px)|(%)/.test(value) ? `${value}px` : value
+                } else {
+                    settings[name] = input.value
+                }
+
+                if (evalName !== undefined && evalName.length > 0) {
+                    eval(evalName)(evalName === "changeAutoAnimation")
+                }
+
+                if (!isApply) {
+                    apply()
+                }
+                checkEnabledSave()
+            }
+
+            function changeBackgroundSize(isApply) {
+                backgroundSize = `${settings.backgroundSizeWidth || 0}% ${settings.backgroundSizeHeight || 0}%`
+
+                if (!isApply) {
+                    apply()
+                }
+                checkEnabledSave()
+            }
+
+            function changeBackgroundPosition(isApply) {
+                backgroundPosition = `${settings.backgroundPositionX || 0}% ${settings.backgroundPositionY || 0}%`
+
+                if (!isApply) {
+                    apply()
+                }
+                checkEnabledSave()
+            }
+
+            function changeBackgroundPositionHover(isApply) {
+                backgroundPositionHover = `${settings.backgroundPositionHoverX || 0}% ${settings.backgroundPositionHoverY || 0}%`
+
+                if (!isApply) {
+                    apply()
+                }
+                checkEnabledSave()
+            }
+
+            function radio(id, isApply) {
+                if (settings.radioCheckedID === id && !isApply) {
+                    return
+                }
+                const inputDeg = document.getElementById("deg")
+
+                if (id === "custom-gradient-deg" && isNaN(Number(inputDeg.value))) {
+                    inputDeg.value = 145
+                }
+                settings.radioCheckedID = id
+                document.getElementById("gradient-deg").style.display = id !== "custom-gradient-deg" ? "none" : "block"
+                const items = document.querySelectorAll("input[type=radio]")
+                settings.deg = document.getElementById(settings.radioCheckedID === "custom-gradient-deg" ? "deg" : `${settings.radioCheckedID}`).value
+
+                for (const i of items) {
+                    i.checked = settings.radioCheckedID === i.id
+                    i.parentElement.querySelector(".cirlce").className = settings.radioCheckedID === i.id ? "cirlce checked" : "cirlce"
+                }
+
+                changeGradientDeg(isApply)
+            }
+
+            function changeGradientDeg(isApply) {
+                gradientDeg = settings.radioCheckedID === "custom-gradient-deg" ? settings.deg.length > 0 ? `${settings.deg}deg, ` : "0deg, " : `${document.getElementById(`${settings.radioCheckedID}`).value}, `
+
+                if (!isApply) {
+                    apply()
+                }
+                checkEnabledSave()
+            }
+
+            function removeAllChildNodes(parent) {
+                while (parent.firstChild) {
+                    parent.removeChild(parent.firstChild)
+                }
+            }
+
+            function changeColor(i, value) {
+                if (value.length < 2 && settings.colors.length < 3) {
+                    document.getElementById(`input-color${Number(i) + 1}`).value = "#FFB890"
+                    settings.colors[i].color = "#FFB890"
+                } else {
+                    settings.colors[i].color = value
+                }
+
+                apply()
+                checkEnabledSave()
+            }
+
+            function changeColorLength(i, value) {
+                settings.colors[i].colorLength = value
+
+                apply()
+                checkEnabledSave()
+            }
+
+            function delColor(i) {
+                if (settings.colors.length === 2) {
+                    sendNotice("Нельзя удалять цвет, когда их не более двух", 1700)
+
+                    return
+                }
+                const blockColors = document.getElementById("colors")
+                settings.colors.splice(i, 1)
+
+                removeAllChildNodes(blockColors)
+                changeColors()
+                apply()
+            }
+
+            function addColor() {
+                if (settings.colors.length < 10) {
+                    settings.colors.push({ color: "", colorLength: "" })
+                    changeColors()
+                } else {
+                    sendNotice("Нельзя добавить более 10 цветов", 1000)
+                }
+            }
+
+            function changeColors(isApply, isReset) {
+                const blockColors = document.getElementById("colors")
+
+                if (isReset) {
+                    removeAllChildNodes(blockColors)
+                }
+
+                for (const i in settings.colors) {
+                    const index = Number(i) + 1
+                    const color = document.createElement("div")
+                    color.className = "color"
+                    color.id = `color${index}`
+                    const divColor = document.createElement("div")
+
+                    const captionColor = document.createElement("p")
+                    captionColor.innerText = `Цвет ${index}`
+
+                    const deleteColor = document.createElement("span")
+                    deleteColor.className = "delete-color"
+                    deleteColor.title = "Удалить цвет"
+                    deleteColor.id = index
+                    deleteColor.addEventListener("click", () => delColor(i))
+
+                    const icon = document.createElement("span")
+                    deleteColor.appendChild(icon)
+                    captionColor.appendChild(deleteColor)
+
+                    divColor.appendChild(captionColor)
+
+                    const spanForDivColor = document.createElement("span")
+                    const inputColor = document.createElement("input")
+                    inputColor.type = "text"
+                    inputColor.id = `input-color${index}`
+                    inputColor.placeholder = "hex"
+                    inputColor.value = settings.colors[i].color ?? ""
+                    inputColor.dataset.jscolor = "{}"
+                    inputColor.addEventListener("change", () => changeColor(i, inputColor.value))
+
+                    spanForDivColor.appendChild(inputColor)
+
+                    divColor.appendChild(spanForDivColor)
+
+                    const divColorLength = document.createElement("div")
+                    const captionColorLength = document.createElement("p")
+                    captionColorLength.innerText = `Длина цвета ${index}`
+                    const inputColorLength = document.createElement("input")
+                    inputColorLength.type = "text"
+                    inputColorLength.id = `color-length${index}`
+                    inputColorLength.placeholder = "%"
+                    inputColorLength.value = settings.colors[i].colorLength ?? ""
+                    inputColorLength.addEventListener("input", () => changeColorLength(i, inputColorLength.value))
+
+                    divColorLength.appendChild(captionColorLength)
+                    divColorLength.appendChild(inputColorLength)
+
+                    color.appendChild(divColor)
+                    color.appendChild(divColorLength)
+                    if (blockColors.childNodes[i] === undefined) {
+                        blockColors.appendChild(color)
+                    }
+                }
+
+                jscolor.install()
+
+                if (!isApply) {
+                    apply()
+                }
+                checkEnabledSave()
+            }
+
+            function changeAutosave(isApply, isReset) {
+                const checkbox = document.getElementById("autosave")
+                const checkMark = document.getElementById("autosave-check-mark")
+
+                if (isReset) {
+                    checkbox.checked = true
+                    checkMark.className = "check-mark checked"
+                    checkEnabledReset()
+                    return
+                } else if (isApply) {
+                    checkbox.checked = settings.autosave
+                    checkMark.className = settings.autosave ? "check-mark checked" : "check-mark"
+                    apply()
+                    return
+                }
+
+                checkMark.className = checkbox.checked ? "check-mark checked" : "check-mark"
+                settings.autosave = checkbox.checked
+
+                checkEnabledSave(true)
+                apply()
+
+            }
+
+            function autoAnimationTimeout() {
+                block.style.backgroundPosition = autoAnimation ? backgroundPositionHover : backgroundPosition
+                autoAnimation = !autoAnimation
+            }
+
+            function changeAutoAnimation(changeTransitionDuration, isReset) {
+                const checkbox = document.getElementById("auto-animation")
+                const checkMark = document.getElementById("auto-animation-check-mark")
+
+                if (isReset && checkbox.checked) {
+                    checkbox.checked = false
+                    checkMark.className = "check-mark"
+                    clearInterval(autoAnimationTimeoutID)
+
+                    return
+                }
+
+                checkMark.className = checkbox.checked ? "check-mark checked" : "check-mark"
+                autoAnimation = checkbox.checked
+
+                if (changeTransitionDuration) {
+                    clearInterval(autoAnimationTimeoutID)
+                    if (checkbox.checked) {
+                        autoAnimationTimeoutID = window.setInterval(autoAnimationTimeout, (Number(settings.transitionDuration) * 1000) + 300)
+                    }
+
+                    return
+                }
+
+                if (checkbox.checked) {
+                    autoAnimationTimeoutID = window.setInterval(autoAnimationTimeout, (Number(settings.transitionDuration) * 1000) + 300)
+                    checkEnabledReset()
+                } else {
+                    clearInterval(autoAnimationTimeoutID)
+                    block.style.backgroundPosition = backgroundPosition
+                }
+            }
+
+            function copyAllCode() {
+                const textarea = document.createElement("textarea")
+                textarea.id = "copy-all-code"
+                textarea.style.position = "absolute"
+                textarea.style.left = "-99999px"
+                textarea.value = `
+.block {
+    width: ${settings.width}px;
+    height: ${settings.height}px;
+    border-radius: ${settings.borderRadius};
+    background: ${gradient} ${backgroundPosition.length > 0 ? `${backgroundPosition}` : "0% 50%"} ${backgroundSize.length > 0 ? `/ ${backgroundSize}` : "/ 300% 100%"};
+    transition: all ${settings.transitionDuration}s ease-in-out;
+}
+
+.block:hover {
+    background-position: ${backgroundPositionHover.length > 0 ? `${backgroundPositionHover};` : "100% 50%;"}
+}
+`
+                document.body.appendChild(textarea)
+                textarea.focus()
+                textarea.select()
+                document.execCommand("copy")
+                setTimeout(() => {
+                    document.body.removeChild(textarea)
+                }, 100)
+                sendNotice("Код успешно скопирован", 800)
+            }
+
+            function copyGradient() {
+                const textarea = document.createElement("textarea")
+                textarea.id = "copy-gradient-code"
+                textarea.style.position = "absolute"
+                textarea.style.left = "-99999px"
+                textarea.value = `${gradient};`
+                document.body.appendChild(textarea)
+                textarea.focus()
+                textarea.select()
+                document.execCommand("copy")
+                setTimeout(() => {
+                    document.body.removeChild(textarea)
+                }, 100)
+                sendNotice("Градиент успешно скопирован", 800)
+            }
+
+            function closeModal() {
+                const notice = document.body.querySelector(".notice")
+                notice.style.opacity = 0
+                setTimeout(() => {
+                    notice.style.visibility = "hidden"
+                }, 300)
+            }
+
+            function outside(e) {
+                const share = document.getElementById("share")
+                const button = document.getElementById("link")
+                const target = e.target
+
+                if (!button.contains(target) && !share.contains(target)) {
+                    document.removeEventListener("click", outside)
+                    closeModal()
+                }
+            }
+
+            function esc(e) {
+                if (e.code === "Escape") {
+                    document.removeEventListener("keydown", esc)
+                    closeModal()
+                }
+            }
+
+            function sendNotice(message, duration, isNotClose) {
+                const notice = document.body.querySelector(".notice")
+                const noticeText = document.getElementById("noticeText")
+                noticeText.innerText = message
+                notice.style.opacity = 1
+                notice.style.visibility = "visible"
+                if (!isNotClose) {
+                    setTimeout(() => {
+                        notice.style.opacity = 0
+                    }, duration)
+                    setTimeout(() => {
+                        notice.style.visibility = "hidden"
+                        noticeText.innerText = ""
+                    }, duration + 300)
+                } else {
+                    document.getElementById("share").style.display = "flex"
+                    document.addEventListener("click", outside)
+                    document.addEventListener("keydown", esc)
+                }
+            }
+
+            function resetInputsValues() {
+                return [changeInput([{ name: "width" }, { name: "height" }, { name: "borderRadius" }, { name: "backgroundSizeWidth", eval: "changeBackgroundSize" }, { name: "backgroundSizeHeight", eval: "changeBackgroundSize" }, { name: "deg", eval: "changeGradientDeg" }, { name: "backgroundPositionX", eval: "changeBackgroundPosition" }, { name: "backgroundPositionY", eval: "changeBackgroundPosition" }, { name: "backgroundPositionHoverX", eval: "changeBackgroundPositionHover" }, { name: "backgroundPositionHoverY", eval: "changeBackgroundPositionHover" }, { name: "transitionDuration", eval: "changeAutoAnimation" }], "", true, true), changeColors(true, true), radio("custom-gradient-deg", true), changeAutosave(true, true), apply()]
+            }
+
+            function reset() {
+                if (isEnabledReset) {
+                    settings = JSON.parse(JSON.stringify(defaultSettings))
+                    document.getElementById("reset").disabled = true
+                    resetInputsValues()
+                }
+                checkEnabledSave(true)
+            }
+
+            function loadPage() {
+                document.getElementById("page").style.display = "flex"
+            }
+
+            function save() {
+                if (settings.autosave) {
+                    return
+                }
+                checkEnabledSave()
+                apply(true)
+            }
+
+            function copyLink() {
+                sendNotice("", 800, true)
+            }
+
+            function share(s) {
+                const index = window.location.href.indexOf("?")
+                if (s === undefined) {
+                    const textarea = document.createElement("textarea")
+                    textarea.id = "copy-link"
+                    textarea.style.position = "absolute"
+                    textarea.style.left = "-99999px"
+                    textarea.value = `${(window.location.href).substring(0, index > 0 ? index : window.location.href.length)}?${encode()}`
+                    document.body.appendChild(textarea)
+                    textarea.focus()
+                    textarea.select()
+                    document.execCommand("copy")
+                    setTimeout(() => {
+                        document.body.removeChild(textarea)
+                    }, 100)
+                    document.getElementById("share").style.display = "none"
+                    sendNotice("Ссылка успешно скопирована", 800)
+                    return
+                }
+
+                const link = `${window.location.href.includes("file:") ? "https://pictures.apteka-april.ru/generic/GradientSandbox.html" : `${(window.location.href).substring(0, index > 0 ? index : window.location.href.length)}`}?${encode()}`
+                let url = ""
+                const title = "Смотри какой градиент у меня получился!"
+
+                if (s === "vk") {
+                    url = `https://vk.com/share.php?title=${title}&url=${link}`
+                } else if (s === "facebook") {
+                    url = `https://www.facebook.com/sharer.php?caption=${title}&u=${link}`
+                } else if (s === "twitter") {
+                    url = `https://twitter.com/intent/tweet?url=${link}`
+                } else if (s === "ok") {
+                    url = `https://connect.ok.ru/offer?url=${link}&title=${title}&imageUrl="ss"`
+                } else if (s === "whatsapp") {
+                    url = `https://api.whatsapp.com/send?text=${link}`
+                } else if (s === "telegram") {
+                    url = `https://telegram.me/share/url?url=${link}&text=${title}`
+                }
+
+                window.open(url, "", `width=${600}, height=${400}, top=${screen.height / 2 - 400 / 2}, left=${screen.width / 2 - 600 / 2}`)
+                closeModal()
+            }
+
+            function init() {
+                return [changeInput([{ name: "width" }, { name: "height" }, { name: "borderRadius" }, { name: "backgroundSizeWidth", eval: "changeBackgroundSize" }, { name: "backgroundSizeHeight", eval: "changeBackgroundSize" }, { name: "deg", eval: "changeGradientDeg" }, { name: "backgroundPositionX", eval: "changeBackgroundPosition" }, { name: "backgroundPositionY", eval: "changeBackgroundPosition" }, { name: "backgroundPositionHoverX", eval: "changeBackgroundPositionHover" }, { name: "backgroundPositionHoverY", eval: "changeBackgroundPositionHover" }, { name: "transitionDuration", eval: "changeAutoAnimation" }], "", true), changeColors(true), radio(settings.radioCheckedID, true), changeAutosave(true), apply(), loadPage()]
+            }
+        </script>
+    </div>
+</body>
+
+</html>
